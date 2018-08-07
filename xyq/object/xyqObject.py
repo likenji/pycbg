@@ -7,210 +7,283 @@ Created on Thu Jul  5 23:29:38 2018
 
 from pycbg.PcConstant import *
 
-class Character(object):
-    serverName = None
-    name = None
-    ID = None
-    state = None
-    level = None
-    figure = None
-    org = None
-    sch = None
-    orgCtrb = None
-    schCtrb = None
-    goldID = None
-    achvPt = None
-    ptntlNum = None
-    availExp = None
-    qianYuanDan = None
-    totalExp = None
-    mnckZongzi = None
-    jiyuan = None
-    formerTribe = None
-    formerOriginList = []
-    shuXingOption = []
-    
-    #人物修炼
-    ADBuffLevel = None
-    ADBuffLevelCeiling = None
-    ADDeLevel = None
-    ADDeLevelCeiling = None
-    APBuffLevel = None
-    APBuffLevelCeiling = None
-    APDeLevel = None
-    APDeLevelCeiling = None
-    
-    #猎术修炼
-    HuntBuffLevel = None
-    
-    #召唤兽修炼
-    ADBuffLevel_BB = None
-    ADDeLevel_BB = None
-    APBuffLevel_BB = None
-    APDeLevel_BB = None
-    
-    #战斗相关技能
-    #师门
-    schoolSkill1 = None
-    schoolSkill2 = None
-    schoolSkill3 = None
-    schoolSkill4 = None
-    schoolSkill5 = None
-    schoolSkill6 = None
-    schoolSkill7 = None
-    
-    #战斗辅助技能
-    #技能映射    
-    qiangShen = None
-    mingXiang = None
-    qiangZhuang = None
-    shenSu = None
+class Commodity(object):
+	url = EMPTY_STRING
+	price = EMPTY_INT
+	accept_bargain = EMPTY_INT
+	collect_num = EMPTY_INT
+	in_fair_show = EMPTY_INT
+	time_left = EMPTY_STRING
+	is_independent = 1
 
-class Pet(object):
-    '''    
-    areaName = None
-    areaID = None
-    serverName = ""
-    serverType = None
-    serverID = None
+	serverName = EMPTY_STRING 
+	serverID = EMPTY_STRING
+	lock = EMPTY_INT
+	lockNew = EMPTY_INT
 
-    sellerID = None
-    sellerName = ""
-    price = None
-    accept_bargain = 0
-    collect_num = None
-    create_time = ""
-    front_status = None
-    '''
+class Role(Commodity):
+	name = EMPTY_STRING		# 昵称
+	ID = EMPTY_STRING  		# ID
+	goldID = EMPTY_INT		# 金色ID
 
-    color = None
-    realColor = None    
-    #desc项
-    typeName = EMPTY_STRING #0
-    typeID = EMPTY_STRING #1
-    level = EMPTY_INT #2
+	level = EMPTY_INT		# 等级
+	state = EMPTY_INT		# 未飞升0，飞升1，渡劫2
+	huashenglv = EMPTY_INT	# 化圣层数
+	figure = EMPTY_STRING	# 外形
+	school = EMPTY_STRING	# 门派
+	qianYuanDan = EMPTY_INT # 乾元丹
+	addPoint = EMPTY_INT	# 月饼粽子
+	jiYuan = EMPTY_INT		# 机缘
+	qianNengGuo = EMPTY_INT # 潜能果
 
-    #HP = None #3
-    #MP = None #4
-    AD = EMPTY_INT #5
-    DEF = EMPTY_INT #6
-    SPD = EMPTY_INT #7
+	clothes_num = EMPTY_INT 
+	rmb_riding_num = EMPTY_INT 
 
-    #LYT = None #8
-    HP_P = EMPTY_INT
-    MP_P = EMPTY_INT
-    AD_P = EMPTY_INT
-    DEF_P = EMPTY_INT
-    SPD_P = EMPTY_INT
-    unallocated_P = EMPTY_INT
+	sanjiegongji = EMPTY_INT	#三界功绩
+	heroScore = EMPTY_INT	# 英雄大会
+	swordScore = EMPTY_INT	# 剑会积分
 
-    AP = EMPTY_INT
-    HP_max = EMPTY_INT
-    MP_max = EMPTY_INT
-    DRNC = EMPTY_INT
+	pkgExt = EMPTY_INT		# 行囊拓展
+	petExt = EMPTY_INT		# 召唤兽格子拓展
 
-    #wuxing = None
-    AD_APTTD = EMPTY_INT
-    DEF_APTTD = EMPTY_INT
-    HP_APTTD = EMPTY_INT
-    MP_APTTD = EMPTY_INT
-    SPD_APTTD = EMPTY_INT
-    MS_APTTD = EMPTY_INT
-    raw_growth = EMPTY_INT
-    growth = EMPTY_FLOAT
-    
-    skillList = []
-    APSkill = None
-    is_baobao = None				# is it a BaoBao?
-    used_yuanxiao = None			# 元宵
-    used_shuijinggao = None         # 水晶糕
-    used_ruyidan = None			# 如意丹
-    used_qianjinlu = None 			# 千金露
-    used_lianshou = None 	# 炼兽真经
-    coreDict = {}
+	cash = EMPTY_INT		# 现金
+	saving = EMPTY_INT		# 存款
+	learnCash = EMPTY_INT	# 储备金
+	goodness = EMPTY_INT	# 善恶点
+	xianyu = EMPTY_INT		# 仙玉
+	jingli = EMPTY_INT		# 精力
+	orgCtrb = EMPTY_INT		# 帮派贡献度
+	schCtrb = EMPTY_INT		# 门派贡献度
 
-    lingxing = EMPTY_INT
-    tmp_lingxing = EMPTY_INT
-    jinjie_cd = EMPTY_INT
-    used_qlxl = EMPTY_INT
+	achvPoint = EMPTY_INT	# 成就点
+	availExp = EMPTY_INT	# 可用经验
+	totalExp = EMPTY_INT	# 总经验
 
-    coreName = EMPTY_STRING
-    coreID = EMPTY_INT
-    core_positive = EMPTY_INT 
-    core_negative = EMPTY_INT
-    core_close = EMPTY_INT
+	#属性点
+	HP_P = EMPTY_INT		# 体力
+	MP_P = EMPTY_INT		# 魔力
+	AD_P = EMPTY_INT		# 力量
+	DEF_P = EMPTY_INT		# 耐力
+	SPD_P = EMPTY_INT		# 速度
+	unallocated_P = EMPTY_INT		# 未分配点数
+	
+	#人物修炼
+	exptSki1 = EMPTY_INT		# 攻击修炼
+	exptSki2 = EMPTY_INT		# 防御修炼
+	exptSki3 = EMPTY_INT		# 法术修炼
+	exptSki4 = EMPTY_INT		# 抗法修炼
+	exptSki5 = EMPTY_INT		# 猎术修炼
+	
+	maxExpt1 = 20				# 攻修上限
+	maxExpt2 = 20				# 防御上限
+	maxExpt3 = 20				# 法修上限
+	maxExpt4 = 20				# 抗法上限
 
-    jj_HP_P = EMPTY_INT
-    jj_MP_P = EMPTY_INT
-    jj_AD_P = EMPTY_INT
-    jj_DEF_P = EMPTY_INT
-    jj_SPD_P = EMPTY_INT
+	#召唤兽修炼
+	beastSki1 = EMPTY_INT		# 攻击修炼
+	beastSki2 = EMPTY_INT		# 防御修炼
+	beastSki3 = EMPTY_INT		# 法术修炼
+	beastSki4 = EMPTY_INT		# 抗法修炼
+	
+	#战斗相关技能
+	#师门
+	def __init__(self):
+		super(Commodity, self).__init__()
+		self.equip_list = []		# 装备
+		self.riding_list = []		# 坐骑
+		self.pet_list = []			# 召唤兽
+		self.child = []				# 孩子
+		self.avatar_list = []		# 锦衣
+		self.rmb_riding_list =[]	# 祥瑞
+		self.skill_list = []  		# 技能
+		self.prev_school_list = []	# 历史门派
+		self.attrs_option = []		# 属性点分配方案
+		self.fabao_list = []		# 法宝
+		self.shenqi = [] 			# 神器
 
-    def __init__(self):
-        self.skillList = []         # 防止共享列表
-        self.coreDict = {}          # 防止共享字典
+class Pet(Commodity):
+	''' 
+	areaName = None
+	areaID = None
+	serverName = ""
+	serverType = None
+	serverID = None
 
-        self.equip1 = Equipment_pet()
-        self.equip2 = Equipment_pet()
-        self.equip3 = Equipment_pet()
-        self.equip4 = Equipment_pet()
+	sellerID = None
+	sellerName = ""
+	price = None
+	accept_bargain = 0
+	collect_num = None
+	create_time = ""
+	front_status = None
+	'''
+
+	summon_color = EMPTY_INT      # 是否染色
+	realColor = EMPTY_INT      # 染色丹的颜色
+	#desc项
+	typeName = EMPTY_STRING # 召唤兽类型名称
+	typeID = EMPTY_STRING   # 召唤兽类型编号
+	level = EMPTY_INT   # 召唤兽等级
+
+	#HP = None   # 召唤兽当前气血
+	#MP = None   # 召唤兽当前魔法
+	AD = EMPTY_INT  # 召唤兽攻击力
+	DEF = EMPTY_INT  # 召唤兽防御
+	SPD = EMPTY_INT  # 召唤兽速度
+
+	#LYT = None  # 召唤兽忠诚度
+	HP_P = EMPTY_INT      # 召唤兽体力点
+	MP_P = EMPTY_INT      # 召唤兽魔力点
+	AD_P = EMPTY_INT      # 召唤兽力量点
+	DEF_P = EMPTY_INT   # 召唤兽耐力点
+	SPD_P = EMPTY_INT   # 召唤兽速度点
+	unallocated_P = EMPTY_INT  #召唤兽未分配潜力点
+
+	AP = EMPTY_INT  # 召唤兽灵力
+	HP_max = EMPTY_INT  # 召唤兽最大气血
+	MP_max = EMPTY_INT  # 召唤兽最大魔法
+	DRNC = EMPTY_INT      # 召唤兽寿命(durance)
+
+	#wuxing = None
+	AD_APTTD = EMPTY_INT     # 召唤兽攻击资质
+	DEF_APTTD = EMPTY_INT    # 召唤兽防御资质
+	HP_APTTD = EMPTY_INT     # 召唤兽体力资质
+	MP_APTTD = EMPTY_INT     # 召唤兽法力资质
+	SPD_APTTD = EMPTY_INT    # 召唤兽速度资质
+	MS_APTTD = EMPTY_INT     # 召唤兽躲避资质
+	raw_growth = EMPTY_INT   # 爬取得到的成长, 1264
+	growth = EMPTY_FLOAT     # 用于计算的成长, 1.264
+	
+	skillList = []  # 技能列表
+	APSkill = EMPTY_INT  # 法术技能
+	is_baobao = None      # 是否是宝宝?
+	used_yuanxiao = EMPTY_INT  # 元宵
+	used_shuijinggao = EMPTY_INT   # 水晶糕
+	used_ruyidan = EMPTY_INT     # 如意丹
+	used_qianjinlu = EMPTY_INT # 千金露
+	used_lianshou = EMPTY_INT  # 炼兽真经
+	coreDict = {}    # 召唤兽内丹
+
+	lingxing = EMPTY_INT     # 召唤兽最高灵性
+	tmp_lingxing = EMPTY_INT   # 召唤兽当前灵性
+	jinjie_cd = EMPTY_INT   # 召唤兽进阶冷却
+	used_qlxl = EMPTY_INT   # 召唤兽使用过的清灵仙露数
+
+	coreName = EMPTY_STRING # 召唤兽特性
+	coreID = EMPTY_INT  # 召唤兽特性ID
+	core_positive = EMPTY_INT  # 召唤兽特性正向效果
+	core_negative = EMPTY_INT  # 召唤兽特性负向效果
+	core_close = EMPTY_INT   # 召唤兽特性关闭状态
+
+	jj_HP_P = EMPTY_INT  # 进阶110增加的体力
+	jj_MP_P = EMPTY_INT  # 进阶110增加的魔力
+	jj_AD_P = EMPTY_INT  # 进阶110增加的力量
+	jj_DEF_P = EMPTY_INT     # 进阶110增加的耐力
+	jj_SPD_P = EMPTY_INT     # 进阶110增加的速度
+
+	def __init__(self):
+		super(Commodity, self).__init__()
+		self.skillList = []   # 防止共享列表
+		self.coreDict = {}   # 防止共享字典
+
+		self.equip1 = Equipment_pet()   # 召唤兽1号位装备
+		self.equip2 = Equipment_pet()   # 召唤兽2号位装备
+		self.equip3 = Equipment_pet()   # 召唤兽3号位装备
+		self.equip4 = Equipment_pet()   # 召唤兽饰品
 
 
-    def quality(self, lingxing = 90):    
-        quality_dict = OrderedDict()
-        quality_dict["AD_DEF"] = self.AD_APTTD * self.level * 0.001 * (1.9 + self.growth/1000 * 1.3) +\
-                                self.DEF_APTTD * self.level * 0.001 * (1.23 + self.growth/1000 * 0.87) / (4/3) +\
-                                self.HP_APTTD * self.level * 0.001 / 6 +\
-                                self.growth/1000 * (self.level + self.level + self.level + self.level*5 + (50 if not self.is_baobao else 100) + lingxing * 2)        
-        quality_dict["AD_HP"] = self.AD_APTTD * self.level * 0.001 * (1.9 + self.growth/1000 * 1.3) +\
-                                self.DEF_APTTD * self.level * 0.001 * (1.23 + self.growth/1000 * 0.87) / (6) +\
-                                self.HP_APTTD * self.level * 0.001 / 6 +\
-                                self.growth/1000 * (self.level + self.level + self.level*5 + (50 if not self.is_baobao else 100) + lingxing * 2 )
-        quality_dict["AD"] = self.AD_APTTD * self.level * 0.001 * (1.9 + self.growth/1000 * 1.3) +\
-                                self.growth/1000 * (self.level + self.level*5 + (50 if not self.is_baobao else 100) + lingxing * 2)
+	def quality(self, lingxing = 90):  
+		quality_dict = OrderedDict()
+		quality_dict["AD_DEF"] = self.AD_APTTD * self.level * 0.001 * (1.9 + self.growth/1000 * 1.3) +\
+		self.DEF_APTTD * self.level * 0.001 * (1.23 + self.growth/1000 * 0.87) / (4/3) +\
+		self.HP_APTTD * self.level * 0.001 / 6 +\
+		self.growth/1000 * (self.level + self.level + self.level + self.level*5 + (50 if not self.is_baobao else 100) + lingxing * 2)   
+		quality_dict["AD_HP"] = self.AD_APTTD * self.level * 0.001 * (1.9 + self.growth/1000 * 1.3) +\
+		self.DEF_APTTD * self.level * 0.001 * (1.23 + self.growth/1000 * 0.87) / (6) +\
+		self.HP_APTTD * self.level * 0.001 / 6 +\
+		self.growth/1000 * (self.level + self.level + self.level*5 + (50 if not self.is_baobao else 100) + lingxing * 2 )
+		quality_dict["AD"] = self.AD_APTTD * self.level * 0.001 * (1.9 + self.growth/1000 * 1.3) +\
+		self.growth/1000 * (self.level + self.level*5 + (50 if not self.is_baobao else 100) + lingxing * 2)
 
-        return quality_dict
+		return quality_dict
 
+class Equipment(Commodity):
+	typeID = EMPTY_INT   # 装备类型编号
 
-class Equipment(object):
-    typeNum = None
-    level = None
-    bingoRate = None
-    accurateP = None
-    DMG = None
-    HP = None
-    MP = None
-    DEF = None
-    SPD = None
-    DRNC = None
-    HP_P = None
-    MP_P = None
-    AD_P = None
-    DEF_P = None
-    SPD_P = None
-    failure = None
-    suitSkill = None
-    gemType = None
-    gemlevel = None
-    creator = None
+	level = EMPTY_INT    # 装备等级
+	loc = EMPTY_INT   # 装备位置  
+	durance = EMPTY_INT # 装备耐久   
+	failure = EMPTY_INT # 装备失败次数
 
-class Equipment_pet(object):
-    typeID = None
-    color = None
-    level = EMPTY_INT
-    loc = EMPTY_INT
-    DRNC = EMPTY_INT
-    failure = EMPTY_INT
+	accuracy = EMPTY_INT      # 装备总命中   
+	DMG = EMPTY_INT # 装备总伤
+	HP = EMPTY_INT  # 装备总气血
+	MP = EMPTY_INT  # 装备初魔法
+	DEF = EMPTY_INT # 装备总防御
+	AP = EMPTY_INT  # 装备总灵 
+	HP_P = EMPTY_INT      # 装备体质
+	MP_P = EMPTY_INT      # 装备魔力
+	AD_P = EMPTY_INT      # 装备力量
+	DEF_P = EMPTY_INT    # 装备耐力
+	SPD_P = EMPTY_INT    # 装备敏捷
 
-    bingoRate = EMPTY_INT
-    DMG = EMPTY_INT
-    HP = EMPTY_INT
-    MP = EMPTY_INT
-    DEF = EMPTY_INT
-    SPD = EMPTY_INT
+	ultimateSkill = EMPTY_STRING   # 特技  
+	specialEffect = []  # 特效
+	suitSkill = EMPTY_STRING     # 套装效果
 
-    HP_P = EMPTY_INT
-    MP_P = EMPTY_INT
-    AD_P = EMPTY_INT
-    DEF_P = EMPTY_INT
-    SPD_P = EMPTY_INT
+	hole = EMPTY_INT      # 开孔数
+	totemCombo = EMPTY_STRING   # 符石组合
+
+	gemLevel = EMPTY_INT      # 镶嵌情况
+	gemType = []     
+	meltDict = {}    # 熔炼情况
+
+	creator = EMPTY_STRING   # 打造者
+
+	def __init__(self):
+		super(Commodity, self).__init__()
+		self.gemType = []   # 防止实例列表
+		self.specialEffect = [] # 防止共享列表
+		self.meltDict = {}   # 同上
+
+class Equipment_pet(Commodity):
+	typeID = EMPTY_INT   # 装备类型编号
+	color = EMPTY_INT    # 装备颜色（饰品专用）
+
+	level = EMPTY_INT    # 装备等级
+	loc = EMPTY_INT   # 装备位置
+	durance = EMPTY_INT # 装备耐久
+	failure = EMPTY_INT # 装备失败次数
+
+	gemType = EMPTY_STRING   # 镶嵌类型
+	gemLevel = EMPTY_INT     # 镶嵌等级
+
+	bingoRate = EMPTY_INT   # 命中率
+	DMG = EMPTY_INT   # 初伤害
+	HP = EMPTY_INT  # 初气血
+	MP = EMPTY_INT  # 初魔法
+	DEF = EMPTY_INT   # 初防御
+	SPD = EMPTY_INT   # 初速度
+
+	HP_P = EMPTY_INT      # 体力
+	MP_P = EMPTY_INT      # 魔力
+	AD_P = EMPTY_INT      # 力量
+	DEF_P = EMPTY_INT    # 耐力
+	SPD_P = EMPTY_INT    # 速度
+	AP = EMPTY_INT  # 灵力
+
+	def __init__(self):
+		super(Commodity, self).__init__()
+
+class LingShi(Commodity):
+	typeID = EMPTY_INT
+	level = EMPTY_INT
+	specialEffect = EMPTY_INT
+
+	durance = EMPTY_INT 	# 装备耐久
+	failure = EMPTY_INT 	# 装备失败次数
+	gemLevel = EMPTY_INT	# 精练等级
+
+	def __init__(self):
+		self.attrs_list = [] #
+
