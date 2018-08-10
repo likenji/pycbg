@@ -23,7 +23,7 @@ class Commodity(object):
 
 class Role(Commodity):
 	name = EMPTY_STRING		# 昵称
-	ID = EMPTY_STRING  		# ID
+	ID = EMPTY_STRING		# ID
 	goldID = EMPTY_INT		# 金色ID
 
 	level = EMPTY_INT		# 等级
@@ -36,8 +36,8 @@ class Role(Commodity):
 	jiYuan = EMPTY_INT		# 机缘
 	qianNengGuo = EMPTY_INT # 潜能果
 
-	clothes_num = EMPTY_INT 
-	rmb_riding_num = EMPTY_INT 
+	avatar_num = EMPTY_INT	# 锦衣数
+	rmb_riding_num = EMPTY_INT 	# 祥瑞数
 
 	sanjiegongji = EMPTY_INT	#三界功绩
 	heroScore = EMPTY_INT	# 英雄大会
@@ -95,11 +95,11 @@ class Role(Commodity):
 		self.child = []				# 孩子
 		self.avatar_list = []		# 锦衣
 		self.rmb_riding_list =[]	# 祥瑞
-		self.skill_list = []  		# 技能
+		self.skill_list = []		# 技能
 		self.prev_school_list = []	# 历史门派
 		self.attrs_option = []		# 属性点分配方案
 		self.fabao_list = []		# 法宝
-		self.shenqi = [] 			# 神器
+		self.shenqi = {}			# 神器
 
 class Pet(Commodity):
 	''' 
