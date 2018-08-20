@@ -489,6 +489,7 @@ class Parser(object):
 		pet.summon_color = pet_dict.get("summon_color", 0)
 		pet.realColor = pet_dict.get("iRealColor", 0)
 		
+		print(pet_dict["all_skills"].keys())
 		pet.skillList = list(pet_dict["all_skills"].keys())		
 		pet.APSkill = pet_dict["iGenius"]
 
