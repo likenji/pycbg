@@ -169,7 +169,7 @@ class Role(Commodity):
 	def calculate_life_skill_consumption(self):
 	# 单位：万两，可使用储备金		
 		skills = np.array(list(self.skill_dict.keys())).astype(int)
-		lifeSkills = (skills[((skills>203) && (skills<230)) | (skills==231)])
+		lifeSkills = (skills[((skills>203) & (skills<230)) | (skills==231)])
 		level_list = [self.skill_dict[str(skill)] for skill in lifeSkills]
 		consumption_list = [schoolSkillCumMoneyCnsmpt[level] for level in level_list] 
 		return np.sum(consumption_list)
@@ -177,7 +177,7 @@ class Role(Commodity):
 	def calculate_life_skill_ctrb_consumption(self):
 	# 单位：帮贡		
 		skills = np.array(list(self.skill_dict.keys())).astype(int)
-		lifeSkills = (skills[((skills>203) && (skills<237)) | (skills==231)])
+		lifeSkills = (skills[((skills>203) & (skills<237)) | (skills==231)])
 		level_list = [self.skill_dict[str(skill)] for skill in lifeSkills]
 		consumption_list = [0.5*level**2+level for level in level_list] 
 		return np.sum(consumption_list)
