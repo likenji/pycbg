@@ -5,8 +5,9 @@ Created on Thu Jul 19 20:55:11 2018
 @author: 51667
 """
 from pycbg.xyq.object.xyqObject import *
-#from icecream import ic
+from icecream import ic
 import json
+#import pycbg.xyq.skillMap import *
 role_map = {
 	"usernum":"ID",
 	"cName":"name",
@@ -18,7 +19,7 @@ role_map = {
 	"HugeHorse":"rmb_riding_list",
 	"TA_iAllNewPoint":"qianYuanDan",
 	"addPoint":"addPoint",
-	"all_skills":"skill_list",
+	"all_skills":"skill_dict",
 	"changesch":"prev_school_list",
 	"child":"child",
 	"datang_feat":"datang_feat",
@@ -54,6 +55,8 @@ attr_map={
 	"力量":"AD_P",
 	"耐力":"DEF_P",
 	"敏捷":"SPD_P",
+	"法防":"skillDefence",
+	"躲避":"MS",
 	"耐久度":"durance",
 	"修理失败":"failure",
 	"锻炼等级":"gemLevel",
@@ -98,11 +101,22 @@ gem_number = {
 	"蓝宝石": 4,
 }
 class Parser(object):
-	def desc_proprocess(self, desc_raw):
+	def desc_preprocess(self, desc_raw):
 		desc = (desc_raw.replace("([","{")).replace("])","}")
 		desc = (desc.replace("({","[")).replace("})","]")
 		desc = (desc.replace(",]","]")).replace(",}","}")
 		return desc
+
+	def get_skill_name(self, skillNo):
+		if 1 <= skillNo <= 132:
+			return skill_map["school_skill"][str(No_str)]["name"]
+		elif 151 <= skillNo <= 161:
+			return skill_map["ju_qing_skill"][skillNo]
+		elif 201 <= skillNo <= 237:
+			return skill_map["life_skill"][skillNo]
+		else:
+			print(skillNo)
+			raise("skillNo out of range")
 
 	def remove_sharp_marker(self, desc):
 		styleStart = "#"
@@ -123,6 +137,9 @@ class Parser(object):
 				i += 1
 		return new_desc
 
+	def remove_tap(self, desc):
+		return desc.replace("\t", "")
+
 	def remove_last_space(self, dict_desc):
 		i = -1
 		while(1):
@@ -133,22 +150,24 @@ class Parser(object):
 
 	def parse_role(self, role_desc):
 		role = Role()
-		desc = self.desc_proprocess(role_desc)
-		role_dict = eval(desc)
-
+		if type(role_desc) != dict:			
+			desc = self.desc_preprocess(role_desc)
+			role_dict = eval(desc)
+		else:
+			role_dict = role_desc
 		role.equip_list = [self.parse_equipment2(equip_dict) for equip_dict in role_dict["AllEquip"].values()]
 		role.pet_list = [self.parse_pet2(pet_dict) for pet_dict in role_dict["AllSummon"]]
-		role.riding_list = role_dict["AllRider"].values()
-		role.avatar_list = role_dict["ExAvt"].values()
-		role.rmb_riding_list = role_dict["HugeHorse"].values()
-		role.attrs_option = role_dict["propKept"].values()		
+		role.riding_list = list(role_dict["AllRider"].values())
+		role.avatar_list = list(role_dict["ExAvt"].values())
+		role.rmb_riding_list = list(role_dict["HugeHorse"].values())
+		role.attrs_option = list(role_dict.get("propKept", {}).values())		
 
 		role.avatar_num = role_dict["total_avatar"]
 		role.rmb_riding_num = role_dict["total_horse"]
 		role.sanjiegongji = role_dict["datang_feat"]
 		role.heroScore = role_dict["HeroScore"]
 		role.swordScore = role_dict["sword_score"]
-		role.skill_list = role_dict["all_skills"]
+		role.skill_dict = role_dict["all_skills"]
 
 		role.ID = role_dict["usernum"]
 		role.level = role_dict["iGrade"]
@@ -197,38 +216,60 @@ class Parser(object):
 
 		return role
 		
-	def parse_equipment(self, equip_desc_raw):		
-		desc = self.desc_proprocess(equip_desc_raw)
+	def parse_equipment(self, equip_desc_raw):
+		# 解析商品——人物装备		
+		desc = self.desc_preprocess(equip_desc_raw)
 		desc_list = desc.split("#r")
+		#ic(desc_list) #for debugging
 		length = len(desc_list)
 		equip = Equipment()		
-		level_info = self.remove_sharp_marker(desc_list[1]).split(" ")
-		equip.__dict__[attr_map[level_info[0]]] = int(level_info[1])
 
-		i = 2
+		i = 0
+		if "五行 " in desc_list[i]:
+			i += 1
+		elif desc_list[i] == "":
+			i += 1
+			level_info = self.remove_sharp_marker(desc_list[i]).split("  ")[0].split(" ")
+			equip.__dict__[attr_map[level_info[0]]] = int(level_info[1])
+			i += 1
 		if not self.remove_sharp_marker(desc_list[i]):
 			i += 1
+
 		panel_attrs = self.remove_sharp_marker(desc_list[i]).split(" ")
 		for j in range(len(panel_attrs)//2):
-			equip.__dict__[attr_map[panel_attrs[2*j]]] = int(panel_attrs[2*j + 1])
+			equip.panelAttrsDict[attr_map[panel_attrs[2*j]]] = int(panel_attrs[2*j + 1])
 		i += 1
-		
+
+		to_parse = self.remove_sharp_marker(desc_list[i])	
+		if "耐久度 " in to_parse:
+			durance_info = to_parse.split("  ")
+			for info in durance_info:
+				k1,v1 = info.split(" ") 
+				equip.__dict__[attr_map[k1]] = int(v1[-2]) if "次" in v1 else int(v1)
+			i += 1
+			if i < length:
+				to_parse = self.remove_sharp_marker(desc_list[i])
+				if "锻炼等级 " in to_parse:
+					gem_info = to_parse.split("  ")
+					k1, v1 = gem_info[0].split(" ")
+					equip.__dict__[attr_map[k1]] = int(v1)
+					gem_type = gem_info[1].replace("、", "").split(" ")
+					equip.__dict__[attr_map[gem_type[0]]] = gem_type[1:]
+					i += 1		
+
+				if i < length and "#G#G" == desc_list[i][:4]:
+					extra_attrs_list = self.remove_sharp_marker(desc_list[i]).replace("、 ", "、").split(" ")
+					for j in range(len(extra_attrs_list)//2):
+						if extra_attrs_list[2*j] == "法术吸收率":
+							absorb_list = extra_attrs_list[2*j+1].split("、")
+							for absorb_info in absorb_list:
+								equip.extraAttrsDict[absorb_info[0]+"吸"] = int(absorb_info[1:-1])
+						else:
+							equip.extraAttrsDict[attr_map[extra_attrs_list[2*j]]] = int(extra_attrs_list[2*j+1])
+					i += 1	
 		while(i < length):
-			to_parse = self.remove_sharp_marker(desc_list[i])	
-			if "耐久度 " in to_parse:
-				durance_info = to_parse.split("  ")
-				for info in durance_info:
-					k1,v1 = info.split(" ") 
-					equip.__dict__[attr_map[k1]] = int(v1[-2]) if "次" in v1 else int(v1)
-				i += 1
-			elif "锻炼等级 " in to_parse:
-				gem_info = to_parse.split("  ")
-				k1, v1 = gem_info[0].split(" ")
-				equip.__dict__[attr_map[k1]] = int(v1)
-				gem_type = gem_info[1].replace("、", "").split(" ")
-				equip.__dict__[attr_map[gem_type[0]]] = gem_type[1:]
-				i += 1
-			elif "特技：" in to_parse:
+			to_parse = self.remove_sharp_marker(desc_list[i])
+			if "特技：" in to_parse:
 				k1, v1 = to_parse.split("：")
 				equip.__dict__[attr_map[k1]] = v1
 				i += 1
@@ -251,26 +292,31 @@ class Parser(object):
 				equip.__dict__[attr_map[k1]] = v1
 				i += 3
 			elif "制造者：" in to_parse:					 
-				k1, v1 = to_parse.split("：")
-				equip.__dict__[attr_map[k1]] = v1
+				v1 = to_parse.split("制造者：")[-1]
+				equip.creator = v1
 				i += 1
 			elif "熔炼效果：" in to_parse:
 				i += 2
 				to_parse = self.remove_sharp_marker(desc_list[i])
-				melt_info = to_parse.split("  ")
-				for info in melt_info[:-1]:
-					equip.meltDict[info[-2:]] = int(info[:-2]) 
+				melt_info = to_parse.split(" ")
+				if melt_info[-1] == "":
+					melt_info = melt_info[:-1]	
+				for info in melt_info:
+					equip.meltDict[attr_map[info[-2:]]] = int(info[:-2])
+				i += 1 
 			else:
+				equip.extraDesc.append(to_parse)
 				i += 1
 		return equip
 
 	def parse_equipment2(self, equip_dict):
+		# 解析人物商品中的equip_list项
 		equip_desc_raw = self.remove_last_space(equip_dict["cDesc"])
 		typeID = equip_dict.get("iType", 0)
 		if 27000<= typeID <=28000:
 			equip = self.parse_lingShi(equip_desc_raw)
 		elif 9000<= typeID <=10000:
-			equip = self.parse_equipment_pet2(equip_desc_raw)
+			equip = self.parse_equipment_pet(equip_desc_raw)
 		elif 1000<=typeID<3000 or 31000<typeID<31399:
 			"""
 			aaabb
@@ -312,8 +358,14 @@ class Parser(object):
 					50<=bb<=58, 男 10*(bb-42)=等级
 					60<=bb<=68, 女 10*(bb-52)=等级
 				其他防具：
-					同男性头衣
+					bb<=9, 男 10*(bb-1)=等级
+					10<=bb<=18, 女 10*(bb-10)=等级
 			"""
+			'''
+			if typeID % 100 == 1 or typeID == 2511 or typeID == 2611: # 忽略0级的装备								
+				print(typeID)
+				equip=Equipment()
+			'''
 			equip = self.parse_equipment(equip_desc_raw)
 		else:
 			print(typeID)
@@ -334,7 +386,7 @@ class Parser(object):
 			to_parse = self.remove_sharp_marker(desc_list[i])
 			if not to_parse:
 				i += 1
-			elif i <= 1 and "等级 " == to_parse.split(" ")[0]:
+			elif i <= 1 and "等级" == to_parse.split(" ")[0]:
 				lingShi.level = int(to_parse.split(" ")[1])
 				i += 1
 				if not to_parse:					
@@ -366,8 +418,9 @@ class Parser(object):
 		return lingShi
 
 	def parse_pet(self, pet_desc_raw):
+		# 解析商品召唤兽
 		pet=Pet()
-		desc = self.desc_proprocess(pet_desc_raw)
+		desc = self.desc_preprocess(pet_desc_raw)
 		desc_list = desc.split(";")
 
 		pet.typeName = desc_list[0]
@@ -407,7 +460,7 @@ class Parser(object):
 		pet.used_qianjinlu = int(desc_list[32])
 		pet.used_lianshou = int(desc_list[33])
 
-		json_str = self.desc_proprocess(desc_list[-1])
+		json_str = self.desc_preprocess(desc_list[-1])
 		details=eval(json_str)
 
 		for k, v in details["summon_core"].items():
@@ -437,13 +490,13 @@ class Parser(object):
 			pet.jj_SPD_P = details["jj_extra_add"]["iSpe"]		
 
 		if "summon_equip1" in details:			
-			pet.equip1 = self.parse_equipment_pet2(details["summon_equip1"]["cDesc"])
+			pet.equip1 = self.parse_equipment_pet(details["summon_equip1"]["cDesc"])
 			pet.equip1.typeID = details["summon_equip1"]["iType"]
 		if "summon_equip2" in details:			
-			pet.equip2 = self.parse_equipment_pet2(details["summon_equip2"]["cDesc"])
+			pet.equip2 = self.parse_equipment_pet(details["summon_equip2"]["cDesc"])
 			pet.equip2.typeID = details["summon_equip2"]["iType"]
 		if "summon_equip3" in details:			
-			pet.equip3 = self.parse_equipment_pet2(details["summon_equip3"]["cDesc"])
+			pet.equip3 = self.parse_equipment_pet(details["summon_equip3"]["cDesc"])
 			pet.equip3.typeID = details["summon_equip3"]["iType"]
 		if details.get("summon_equip4_desc", 0):
 			pet.equip4 = Equipment_pet()
@@ -460,6 +513,7 @@ class Parser(object):
 		return pet
 
 	def parse_pet2(self, pet_dict):
+		# 解析人物身上的召唤兽
 		pet=Pet()
 		pet.lock = pet_dict.get("iLock", 0)
 		pet.lockNew = pet_dict.get("lockNew", 0)
@@ -470,7 +524,7 @@ class Parser(object):
 		pet.summon_color = pet_dict.get("summon_color", 0)
 		pet.realColor = pet_dict.get("iRealColor", 0)
 		
-		pet.skillList = list(pet_dict["all_skills"].keys())		
+		pet.skillList = [] if pet_dict["all_skills"]==0 else list(pet_dict["all_skills"].keys())		
 		pet.APSkill = pet_dict["iGenius"]
 
 		pet.AD_APTTD = pet_dict["att"]
@@ -515,17 +569,17 @@ class Parser(object):
 			pet.jj_SPD_P = pet_dict["jj_extra_add"]["iSpe"]
 
 		if "summon_equip1" in pet_dict:			
-			pet.equip1 = self.parse_equipment_pet2(pet_dict["summon_equip1"]["cDesc"])
+			pet.equip1 = self.parse_equipment_pet(pet_dict["summon_equip1"]["cDesc"])
 			pet.equip1.typeID = pet_dict["summon_equip1"]["iType"]
 			pet.equip1.lock = pet_dict["summon_equip1"].get("iLock", 0)
 			pet.equip1.lockNew = pet_dict["summon_equip1"].get("iLockNew", 0)
 		if "summon_equip2" in pet_dict:			
-			pet.equip2 = self.parse_equipment_pet2(pet_dict["summon_equip2"]["cDesc"])
+			pet.equip2 = self.parse_equipment_pet(pet_dict["summon_equip2"]["cDesc"])
 			pet.equip2.typeID = pet_dict["summon_equip2"]["iType"]
 			pet.equip2.lock = pet_dict["summon_equip2"].get("iLock", 0)
 			pet.equip2.lockNew = pet_dict["summon_equip2"].get("iLockNew", 0)
 		if "summon_equip3" in pet_dict:			
-			pet.equip3 = self.parse_equipment_pet2(pet_dict["summon_equip3"]["cDesc"])
+			pet.equip3 = self.parse_equipment_pet(pet_dict["summon_equip3"]["cDesc"])
 			pet.equip3.typeID = pet_dict["summon_equip3"]["iType"]			
 			pet.equip3.lock = pet_dict["summon_equip3"].get("iLock", 0)
 			pet.equip3.lockNew = pet_dict["summon_equip3"].get("iLockNew", 0)
@@ -547,10 +601,62 @@ class Parser(object):
 		pass
 		#to do 
 
-	def parse_equipment_pet(self, pet_equip_desc):	
+	def parse_equipment_pet(self, pet_equip_desc):
+		equip_pet = Equipment_pet()
+
+		desc_list = pet_equip_desc.split("#r")
+		length = len(desc_list)
+		i = 1
+		k1,v1 = desc_list[i].split(" ")[:2]
+		equip_pet.__dict__[attr_map[k1]] = int(v1)
+		i += 1
+
+		panel_attrs = desc_list[i].split(" ")
+		l = len(panel_attrs)
+		for j in range(l//2):
+			if panel_attrs[2*j] != "" and panel_attrs[2*j+1] != "":
+				equip_pet.__dict__[attr_map[panel_attrs[2*j]]] = int(panel_attrs[2*j+1][:-1]) if "%" in panel_attrs[2*j+1] else int(panel_attrs[2*j+1])
+			if "命中率" == panel_attrs[2*j]:
+				equip_pet.loc = 1
+			elif "速度" == panel_attrs[2*j]:				
+				equip_pet.loc = 2
+			elif "防御" == panel_attrs[2*j]:
+				equip_pet.loc = 3
+		i += 1
+		while(i < length):	
+			to_parse = self.remove_sharp_marker(desc_list[i])
+			if i == 3 and "耐久度 " in to_parse:
+				durance_info = to_parse.split("  ")
+				for info in durance_info:
+					k1, v1 = info.split(" ")
+					equip_pet.__dict__[attr_map[k1]] = int(v1[-2]) if "次" in v1 else int(v1)
+					i += 1
+			elif i == 4 and ("+" in to_parse or "-" in to_parse):
+				add_attrs = to_parse.split(" ")
+				l = len(add_attrs)
+				for j in range(l//2):
+					if add_attrs[2*j] != "" and add_attrs[2*j+1] != "":
+						equip_pet.__dict__[attr_map[add_attrs[2*j]]] = int(add_attrs[2*j+1])
+				i += 1
+			elif "套装效果：附加状态" in to_parse:
+				equip_pet.__dict__[attr_map[to_parse[:4]]] = to_parse[9:]
+				i += 1
+			elif "制造者：" in to_parse:
+				i += 1
+			elif "镶嵌等级：" in to_parse:
+				type_info, level_info = to_parse.split(" ")[:2]
+				equip_pet.gemType = type_info[-2:]
+				equip_pet.gemLevel = int(level_info.split("：")[1])
+				i += 1
+			else:
+				i += 1
+		return equip_pet
+
+	def parse_equipment_pet_deprecated(self, pet_equip_desc):
+		# deprecated	
 		equip_pet = Equipment_pet()		
 		'''
-		desc = self.desc_proprocess(pet_equip_desc)
+		desc = self.desc_preprocess(pet_equip_desc)
 		desc_dict = json.loads("{"+ desc + "}")
 		equip_pet.typeNum = desc_dict["iType"]
 		detail = desc_dict["cDesc"]
@@ -615,57 +721,16 @@ class Parser(object):
 					equip_pet.AP_P = int(attr_num)
 		return equip_pet
 
-	def parse_equipment_pet2(self, pet_equip_desc):
-		equip_pet = Equipment_pet()
+if __name__ == "__main__":
+	from xyq_crawler import Crawler
+	crawler = Crawler()
+	p = Parser()
+	price = crawler.get_exchange_rate(39)
+	list_role_id=crawler.get_overall_role_id()
+	print(list_role_id)
+	list_role_desc = [crawler.get_role_by_id(role_id) for role_id in list_role_id]
+	list_role_desc_processed = [p.desc_preprocess(p.remove_tap(role_desc)) for role_desc in list_role_desc]
 
-		desc_list = pet_equip_desc.split("#r")
-		length = len(desc_list)
-		i = 1
-		k1,v1 = desc_list[i].split(" ")[:2]
-		equip_pet.__dict__[attr_map[k1]] = int(v1)
-		i += 1
-
-		panel_attrs = desc_list[i].split(" ")
-		l = len(panel_attrs)
-		for j in range(l//2):
-			if panel_attrs[2*j] != "" and panel_attrs[2*j+1] != "":
-				equip_pet.__dict__[attr_map[panel_attrs[2*j]]] = int(panel_attrs[2*j+1][:-1]) if "%" in panel_attrs[2*j+1] else int(panel_attrs[2*j+1])
-			if "命中率" == panel_attrs[2*j]:
-				equip_pet.loc = 1
-			elif "速度" == panel_attrs[2*j]:				
-				equip_pet.loc = 2
-			elif "防御" == panel_attrs[2*j]:
-				equip_pet.loc = 3
-		i += 1
-		while(i < length):	
-			to_parse = self.remove_sharp_marker(desc_list[i])
-			if i == 3 and "耐久度 " in to_parse:
-				durance_info = to_parse.split("  ")
-				for info in durance_info:
-					k1, v1 = info.split(" ")
-					equip_pet.__dict__[attr_map[k1]] = int(v1[-2]) if "次" in v1 else int(v1)
-					i += 1
-			elif i == 4 and ("+" in to_parse or "-" in to_parse):
-				add_attrs = to_parse.split(" ")
-				l = len(add_attrs)
-				for j in range(l//2):
-					if add_attrs[2*j] != "" and add_attrs[2*j+1] != "":
-						equip_pet.__dict__[attr_map[add_attrs[2*j]]] = int(add_attrs[2*j+1])
-				i += 1
-			elif "套装效果：附加状态" in to_parse:
-				equip_pet.__dict__[attr_map[to_parse[:4]]] = to_parse[9:]
-				i += 1
-			elif "制造者：" in to_parse:
-				i += 1
-			elif "镶嵌等级：" in to_parse:
-				type_info, level_info = to_parse.split(" ")[:2]
-				equip_pet.gemType = type_info[-2:]
-				equip_pet.gemLevel = int(level_info.split("：")[1])
-				i += 1
-			else:
-				i += 1
-		return equip_pet
-
-
-
+	role=p.parse_role(list_role_desc_processed[0])
+	print(role.__dict__)
 
