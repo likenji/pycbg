@@ -15,17 +15,15 @@ class Commodity(object):
 	serverID = EMPTY_STRING
 	ordersn = EMPTY_STRING
 
-	is_independent = 1
-	lock = EMPTY_INT
-	lockNew = EMPTY_INT
+	def __init__(self):
+		self.sellingInfo = [] #每项是dict,(price, status, collect_num, time, time_left)
 
-	price = EMPTY_INT
-	accept_bargain = EMPTY_INT
-	in_fair_show = EMPTY_INT
-	time_left = EMPTY_STRING
+	def __str__(self):
+		for k, v in self.__dict__.items():
+			return v.__str__()
 
 	def gen_params(self):
-		if is_independent == 0:
+		if len(self.sellingInfo) == 0:
 			raise("not a commodity")
 		else:
 			return (
@@ -127,7 +125,7 @@ class Role(Commodity):
 			return 69
 
 	def get_useful_xiulianLimit(self, expLimit):
-		return min(max((self.nearest_level_ceiling - 20) // 5, 20), 25)
+		return min(max((self.nearest_level_ceiling() - 20) // 5, 20), expLimit)
 
 	def calculate_xiulian_consumption(self):
 	# 单位：万两,可使用储备金		
@@ -141,7 +139,7 @@ class Role(Commodity):
 	# 单位：万两,可使用储备金		
 		consumption = 0
 		limit_list = [self.maxExpt1, self.maxExpt2, self.maxExpt3, self.maxExpt4]
-		limit_exp = [xiulianLimitCumExp[get_useful_xiulianLimit(level)] for level in limit_list]		
+		limit_exp = [xiulianLimitCumExp[self.get_useful_xiulianLimit(level)] for level in limit_list]		
 		consumption += np.dot(np.array([3,2,3,2]), np.array(limit_exp))
 		return consumption
 
@@ -156,14 +154,15 @@ class Role(Commodity):
 	def calculate_xiulian_limit_consumption_pet(self):
 	# 单位：万两,可使用储备金		
 		beastSki_list = [self.beastSki1, self.beastSki2, self.beastSki3, self.beastSki4]
-		return np.sum([xiulianLimitExp_pet[level] for level in beastSki_list])
+		return np.sum([xiulianLimitExp_pet[max(level, 20)] for level in beastSki_list])
 
 	def calculate_school_skill_consumption(self):
 	# 单位：万两，可使用储备金
+	#to do list:根据装备上的符石计算正确的师门等级
 		skills = np.array(list(self.skill_dict.keys())).astype(int)
 		schoolSkills = (skills[skills<139])
 		level_list = [self.skill_dict[str(skill)] for skill in schoolSkills]
-		consumption_list = [schoolSkillCumMoneyCnsmpt[level] for level in level_list] 
+		consumption_list = [schoolSkillCumMoneyCnsmpt[min(level, 180)] for level in level_list] 
 		return np.sum(consumption_list)
 
 	def calculate_life_skill_consumption(self):
@@ -171,7 +170,7 @@ class Role(Commodity):
 		skills = np.array(list(self.skill_dict.keys())).astype(int)
 		lifeSkills = (skills[((skills>203) & (skills<230)) | (skills==231)])
 		level_list = [self.skill_dict[str(skill)] for skill in lifeSkills]
-		consumption_list = [schoolSkillCumMoneyCnsmpt[level] for level in level_list] 
+		consumption_list = [0.5*schoolSkillCumMoneyCnsmpt[level] for level in level_list] 
 		return np.sum(consumption_list)
 
 	def calculate_life_skill_ctrb_consumption(self):
@@ -189,8 +188,8 @@ class Role(Commodity):
 		aq_level = self.skill_dict.get("203", 0)
 		qz_level = self.skill_dict.get("230", 0)
 		ss_level = self.skill_dict.get("237", 0)
-		return schoolSkillCumMoneyCnsmpt[qs_level] + schoolSkillCumMoneyCnsmpt[mx_level] +\
-			 qzCumMoneyCnsmpt[qz_level] + qzCumMoneyCnsmpt[ss_level]
+		return 0.5*schoolSkillCumMoneyCnsmpt[qs_level] + 0.5*schoolSkillCumMoneyCnsmpt[mx_level] +\
+			 0.5*schoolSkillCumMoneyCnsmpt[aq_level] +qzCumMoneyCnsmpt[qz_level] + qzCumMoneyCnsmpt[ss_level]
 
 class Pet(Commodity):
 	''' 
@@ -207,7 +206,9 @@ class Pet(Commodity):
 	collect_num = None
 	create_time = ""
 	front_status = None
-	'''
+	'''		
+	lock = EMPTY_INT
+	lockNew = EMPTY_INT
 
 	summon_color = EMPTY_INT    # 是否染色
 	realColor = EMPTY_INT     	# 染色丹的颜色
@@ -298,7 +299,9 @@ class Pet(Commodity):
 
 		return quality_dict
 
-class Equipment(Commodity):
+class Equipment(Commodity):		
+	lock = EMPTY_INT
+	lockNew = EMPTY_INT
 	typeID = EMPTY_INT   		# 装备类型编号
 
 	level = EMPTY_INT    		# 装备等级
@@ -318,26 +321,31 @@ class Equipment(Commodity):
 	DEF_P = EMPTY_INT    		# 装备耐力
 	SPD_P = EMPTY_INT    		# 装备敏捷
 
-	ultimateSkill = EMPTY_STRING   # 特技  
-	specialEffect = []  		# 特效
+	ultimateSkill = EMPTY_STRING# 特技  
+	#specialEffect = []  		# 特效
 	suitSkill = EMPTY_STRING    # 套装效果
 
 	hole = EMPTY_INT      		# 开孔数
 	totemCombo = EMPTY_STRING   # 符石组合
 
 	gemLevel = EMPTY_INT      	# 镶嵌情况
-	gemType = []     
-	meltDict = {}    			# 熔炼情况
+	#gemType = []     
+	#meltDict = {}    			# 熔炼情况
 
 	creator = EMPTY_STRING   	# 打造者
 
 	def __init__(self):
 		super(Commodity, self).__init__()
-		self.gemType = []   	# 防止实例列表
-		self.specialEffect = [] # 防止共享列表
-		self.meltDict = {}   	# 同上
+		self.gemType = []   	# 锻造类型
+		self.specialEffect = [] # 特效
+		self.panelAttrsDict = {}# 面板属性
+		self.extraAttrsDict = {}# 绿字属性
+		self.meltDict = {}   	# 熔炼
+		self.extraDesc = []		# 其他描述
 
-class Equipment_pet(Commodity):
+class Equipment_pet(Commodity):		
+	lock = EMPTY_INT
+	lockNew = EMPTY_INT
 	typeID = EMPTY_INT   		# 装备类型编号
 	color = EMPTY_INT    		# 装备颜色（饰品专用）
 
@@ -366,7 +374,10 @@ class Equipment_pet(Commodity):
 	def __init__(self):
 		super(Commodity, self).__init__()
 
-class LingShi(Commodity):
+class LingShi(Commodity):		
+	lock = EMPTY_INT
+	lockNew = EMPTY_INT
+
 	typeID = EMPTY_INT
 	level = EMPTY_INT
 	specialEffect = EMPTY_INT	# 超级简易否？
