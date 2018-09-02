@@ -1,6 +1,6 @@
 # PYCBG
 Python analyzing tools for Netease CBG. Version 0.1.<br>
-Right now only parse for cbg-xyq. <br>
+Right now only parsing, crawling modules and some simple analyzing functions for cbg-xyq. <br>
 Contributed by 3 students from CU.
 ## Demo
 See [demo_overall_role.ipynb](https://github.com/likenji/pycbg/blob/master/xyq/demo_overall_role.ipynb)
