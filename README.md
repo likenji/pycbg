@@ -1,7 +1,6 @@
 # PYCBG
-Python analyzing tools for Netease CBG. 
-Version 0.1
-Right now only parse for cbg-xyq. 
+Python analyzing tools for Netease CBG. Version 0.1.<br>
+Right now only parse for cbg-xyq. <br>
 Contributed by 3 students from CU.
 ## Demo
 ***
