@@ -6,8 +6,8 @@ Created on Thu Jul 19 20:55:11 2018
 """
 from pycbg.xyq.object.xyqObject import *
 from icecream import ic
-import json
 #import pycbg.xyq.skillMap import *
+
 role_map = {
 	"usernum":"ID",
 	"cName":"name",
@@ -141,8 +141,9 @@ class Parser(object):
 		return desc.replace("\t", "")
 
 	def remove_last_space(self, dict_desc):
+		l = len(dict_desc)
 		i = -1
-		while(1):
+		while -i <= l: # fix the bugs that inputting string like "  " would cause out-of-index errors
 			if dict_desc[i] != " ":
 				break
 			i -= 1
@@ -162,41 +163,49 @@ class Parser(object):
 		role.rmb_riding_list = list(role_dict["HugeHorse"].values())
 		role.attrs_option = list(role_dict.get("propKept", {}).values())		
 
-		role.avatar_num = role_dict["total_avatar"]
-		role.rmb_riding_num = role_dict["total_horse"]
-		role.sanjiegongji = role_dict["datang_feat"]
-		role.heroScore = role_dict["HeroScore"]
-		role.swordScore = role_dict["sword_score"]
+		role.avatar_num = role_dict.get("total_avatar", 0)
+		role.rmb_riding_num = role_dict.get("total_horse", 0)
+		role.sanjiegongji = role_dict.get("datang_feat", 0)
+		role.heroScore = role_dict.get("HeroScore", 0)
+		role.swordScore = role_dict.get("sword_score", 0)
 		role.skill_dict = role_dict["all_skills"]
 
 		role.ID = role_dict["usernum"]
+		role.goldID = 0
+		for i in role_dict.get("idbid_desc", []):
+			if 5 <= i <= 8:
+				role.goldID = 2
+				break
+		goodID = role_dict.get("bid", 0)
+		if goodID > role.goldID:
+			role.goldID = goodID
 		role.level = role_dict["iGrade"]
 		role.state = role_dict["iZhuanZhi"]	
-		role.huashenglv = role_dict["i3FlyLv"]
+		role.huashenglv = role_dict.get("i3FlyLv", 0)
 		role.name = role_dict["cName"]
 		role.school = role_dict["iSchool"]
 		role.achvPoint = role_dict["AchPointTotal"]
 		role.availExp = role_dict["iUpExp"]
-		role.totalExp = role_dict["sum_exp"]
+		role.totalExp = role_dict.get("sum_exp", 0)
 
 		role.cash = role_dict["iCash"]
 		role.saving = role_dict["iSaving"]
 		role.learnCash = role_dict["iLearnCash"]
 		role.goodness = role_dict["iGoodness"] + role_dict["igoodness_sav"]
-		role.xianyu = role_dict["xianyu"]
-		role.jingli = role_dict["energy"]
+		role.xianyu = role_dict.get("xianyu", 0)
+		role.jingli = role_dict.get("energy", 0)
 		role.schCtrb = role_dict["iSchOffer"]
 		role.orgCtrb = role_dict["iOrgOffer"]
 		role.smith = role_dict["iSmithski"]
 		role.sew = role_dict["iSewski"]
 
-		role.qianYuanDan = role_dict["TA_iAllNewPoint"]
-		role.addPoint = role_dict["addPoint"]
-		role.jiYuan = role_dict["jiyuan"]
-		role.prev_school_list = role_dict["changesch"]
+		role.qianYuanDan = role_dict.get("TA_iAllNewPoint", 0)
+		role.addPoint = role_dict.get("addPoint", 0)
+		role.jiYuan = role_dict.get("jiyuan", 0)
+		role.prev_school_list = role_dict.get("changesch", [])
 		role.qianNengGuo = role_dict["iNutsNum"]
-		role.pkgExt = role_dict["iPcktPage"]
-		role.petExt = role_dict["iSumAmountEx"]	
+		role.pkgExt = role_dict.get("iPcktPage", 0)
+		role.petExt = role_dict.get("iSumAmountEx", 0)
 
 		role.exptSki1 = role_dict["iExptSki1"]
 		role.exptSki2 = role_dict["iExptSki2"]
@@ -216,11 +225,12 @@ class Parser(object):
 
 		return role
 		
-	def parse_equipment(self, equip_desc_raw):
+	def parse_equipment(self, equip_desc_raw, debug=False):
 		# 解析商品——人物装备		
 		desc = self.desc_preprocess(equip_desc_raw)
 		desc_list = desc.split("#r")
-		#ic(desc_list) #for debugging
+		if debug == True:
+			print(desc_list) #for debugging
 		length = len(desc_list)
 		equip = Equipment()		
 
@@ -229,9 +239,12 @@ class Parser(object):
 			i += 1
 		elif desc_list[i] == "":
 			i += 1
-			level_info = self.remove_sharp_marker(desc_list[i]).split("  ")[0].split(" ")
-			equip.__dict__[attr_map[level_info[0]]] = int(level_info[1])
-			i += 1
+			if "等级 " in desc_list[i]:
+				level_info = self.remove_sharp_marker(desc_list[i]).split("  ")[0].split(" ")
+				equip.__dict__[attr_map[level_info[0]]] = int(level_info[1])
+				i += 1
+			else:
+				i -= 1
 		if not self.remove_sharp_marker(desc_list[i]):
 			i += 1
 
@@ -309,8 +322,10 @@ class Parser(object):
 				i += 1
 		return equip
 
-	def parse_equipment2(self, equip_dict):
+	def parse_equipment2(self, equip_dict, debug=False):
 		# 解析人物商品中的equip_list项
+		if debug == True:
+			print(equip_dict)
 		equip_desc_raw = self.remove_last_space(equip_dict["cDesc"])
 		typeID = equip_dict.get("iType", 0)
 		if 27000<= typeID <=28000:
@@ -406,8 +421,8 @@ class Parser(object):
 				lingShi.__dict__[attr_map[k1]] = int(v1)
 				i += 1
 			elif "特效：" in to_parse:
-				k1, v1 = to_parse.split(" ")
-				lingShi.__dict__[attr_map[k1]] = int(v1)
+				k1, v1 = to_parse.split("：")
+				lingShi.__dict__[attr_map[k1]] = v1
 				i += 1
 			elif "制造者：" in to_parse:
 				i += 1

@@ -5,32 +5,55 @@ Created on Thu Jul  5 23:29:38 2018
 @author: 51667
 """
 
+#from pycbg.xyq.xyq_crawler import Crawler
 from pycbg.PcConstant import *
 from pycbg.xyq.exptCnsmpt import *
 from pycbg.xyq.qzssCnsmpt import *
 from pycbg.xyq.schoolSkillCnsmpt import *
 import numpy as np
 
+from bs4 import BeautifulSoup
+import datetime
+import json
+import re
+import requests
+
 class Commodity(object):	
 	serverID = EMPTY_STRING
 	ordersn = EMPTY_STRING
 
-	def __init__(self):
-		self.sellingInfo = [] #每项是dict,(price, status, collect_num, time, time_left)
+	def __init__(self):		
+		"""
+		possible elements:
+		'eid', 'serversn', 'equipid', 'equip_type', 'status', 'kindid', 'equip_name', 'owner_nickname', 
+		'owner_roleid', 'price', 'equip_level', 'appointed_roleid', 'expire_time_desc', 'create_time', 
+		'selling_time', 'request_time', 'fair_show_end_time_left', 'fair_show_end_time', 'is_selling', 
+		'is_pass_fair_show', 'game_ordersn', 'is_seller_online', 'storage_type', 'equip_count', 'server_id', 
+		'highlights', 'can_bargin'.
+		"""
+		self.sellingInfo = [] 
+		self.commodityType = "undefined"
 
-	def __str__(self):
-		for k, v in self.__dict__.items():
-			return v.__str__()
-
-	def gen_params(self):
-		if len(self.sellingInfo) == 0:
+	def generate_params(self):
+		if self.sellingInfo:
 			raise("not a commodity")
 		else:
 			return (
 				('act', 'overall_search_show_detail'),
-				('serverid', serverID),
-				('ordersn', ordersn),
+				('serverid', self.serverID),
+				('ordersn', self.ordersn),
 			)
+
+	def generate_url(self):		
+		if self.sellingInfo:
+			raise("not a commodity")
+		else:
+			return "https://xyq.cbg.163.com/cgi-bin/equipquery.py?act=\
+			overall_search_show_detail&serverid={}&ordersn={}".format\
+			(self.serverID,self.ordersn)
+
+	def update_sellingInfo(self):
+		pass
 
 class Role(Commodity):
 	name = EMPTY_STRING		# 昵称
@@ -99,7 +122,7 @@ class Role(Commodity):
 	#战斗相关技能
 	#师门
 	def __init__(self):
-		super(Commodity, self).__init__()
+		super(Role, self).__init__()
 		self.equip_list = []		# 装备
 		self.riding_list = []		# 坐骑
 		self.pet_list = []			# 召唤兽
@@ -111,6 +134,9 @@ class Role(Commodity):
 		self.attrs_option = []		# 属性点分配方案
 		self.fabao_list = []		# 法宝
 		self.shenqi = {}			# 神器
+
+	def update_sellingInfo(self):
+		pass
 
 	def nearest_level_ceiling(self):
 		if self.level >= 160:
@@ -274,7 +300,7 @@ class Pet(Commodity):
 	jj_SPD_P = EMPTY_INT     	# 进阶110增加的速度
 
 	def __init__(self):
-		super(Commodity, self).__init__()
+		super(Pet, self).__init__()
 		self.skillList = []   	# 防止共享列表
 		self.coreDict = {}   	# 防止共享字典
 
@@ -335,7 +361,7 @@ class Equipment(Commodity):
 	creator = EMPTY_STRING   	# 打造者
 
 	def __init__(self):
-		super(Commodity, self).__init__()
+		super(Equipment, self).__init__()
 		self.gemType = []   	# 锻造类型
 		self.specialEffect = [] # 特效
 		self.panelAttrsDict = {}# 面板属性
@@ -372,7 +398,7 @@ class Equipment_pet(Commodity):
 	AP = EMPTY_INT  			# 灵力
 
 	def __init__(self):
-		super(Commodity, self).__init__()
+		super(Equipment_pet, self).__init__()
 
 class LingShi(Commodity):		
 	lock = EMPTY_INT
@@ -387,6 +413,6 @@ class LingShi(Commodity):
 	gemLevel = EMPTY_INT		# 精练等级
 
 	def __init__(self):
-		super(Commodity, self).__init__()
+		super(LingShi, self).__init__()
 		self.attrs_list = [] 	# 属性列表，包括黄字和绿字
 
