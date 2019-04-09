@@ -5,6 +5,12 @@ Right now only parsing, crawling modules and some simple analyzing functions for
 None<br>
 But when you download or clone code, make sure that **the folder named pycbg is in the list of your environment variables.**
 For what to do, you can simply download the code and unzip it into the path of your Python interpreter/Anaconda folder.
+Or, you can add such code in the front of the demo code.
+'''python
+import sys
+import os
+sys.path.append(os.getcwd())
+'''
 ## Demo
 See [demo_overall_role.ipynb](https://github.com/likenji/pycbg/blob/master/xyq/demo_overall_role.ipynb)
 ## Introduction (Chinese)
