@@ -9,7 +9,7 @@ Or, you can add such code in the front of the demo code.
 ```python
 import sys
 import os
-sys.path.append(os.getcwd())
+sys.path.append(os.getcwd()[:-10])
 ```
 ## Demo
 See [demo_overall_role.ipynb](https://github.com/likenji/pycbg/blob/master/xyq/demo_overall_role.ipynb)
